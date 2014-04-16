@@ -88,6 +88,17 @@ int connect_ap(int conn_n)
     return 0;
 }
 
+int get_ip(char *ip)
+{
+    union SceNetApctlInfo info_ip;
+    if (sceNetApctlGetInfo(PSP_NET_APCTL_INFO_IP, &info_ip) != 0) {
+        return 0;
+    }
+    memcpy(ip, info_ip.ip, 16);
+    return 1;
+}
+
+
 int ExitCallback(int arg1, int arg2, void *common)
 { 
     run = 0;

@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     pspDebugScreenInit();
     SetupExitCallback();
     
-    printf("pspnetcat\n");
+    printf("pspnetcat | netcat client\n");
     
     sceUtilityLoadNetModule(PSP_NET_MODULE_COMMON);
     sceUtilityLoadNetModule(PSP_NET_MODULE_INET);
@@ -38,6 +38,12 @@ int main(int argc, char *argv[])
 
     int net = select_netconfig();
     connect_ap(net);
+    printf("Connected to " IP " on port %i\n", PORT);
+    char psp_ip[16];
+    if (get_ip(psp_ip))
+        printf("PSP's IP: %s\n", psp_ip);
+    else
+        printf("Could not get PSP IP address\n");
     
     int sock = sceNetInetSocket(AF_INET, SOCK_STREAM, 0);
     
@@ -47,17 +53,15 @@ int main(int argc, char *argv[])
     sa_dst.sin_port = htons(PORT);
     inet_pton(AF_INET, IP, &sa_dst.sin_addr.s_addr);
     
-    int ret = sceNetInetConnect(sock, (struct sockaddr *) &sa_dst, sizeof(struct sockaddr_in));
-    printf("connect returned %i\n", ret);
-    if (ret < 0) run = 0;
+    sceNetInetConnect(sock, (struct sockaddr *) &sa_dst, sizeof(struct sockaddr_in));
     
-    char str[] = "Hello!\n";
+    char str[] = "Hello from the PSP!\n";
     sceNetInetSend(sock, str, sizeof(str), 0);
     
-    char buf[513];
+    char buf[512];
     while (run) {
-        int n = sceNetInetRecv(sock, buf, 512, 0);
-        buf[n] = '\0';
+        memset(buf, 0, sizeof(buf));
+        sceNetInetRecv(sock, buf, 512, 0);
         printf("Received: %s", buf);
         sceDisplayWaitVblankStart();
     }
